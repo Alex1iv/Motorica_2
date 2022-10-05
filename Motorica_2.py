@@ -272,12 +272,11 @@ def get_y_train():
     y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
     return y_train_vectors
 
-def get_test_id(id_list):
+def get_test_id(id_list, y_train_vectors):
   """
   #Функция отображения списка наблюдений.
   #Аргументы функции: список из номера теста (timestep) и класса жеста
   """
-  #global samples
   #global y_train_vectors
   get_y_train()
   for id in id_list:
@@ -289,3 +288,48 @@ def get_test_id(id_list):
     print(f"Наблюдения жеста {id}: {str(samples)}")
     samples = pd.Series(data=samples, name=f'{str(id)}', index=[id]*len(samples))
     #return samples
+
+
+
+def get_sensor_list(id, print_active=False, print_reliable=False):
+  """
+  Функция печати и импорта в память всех номеров датчиков
+  Аргумент функции - номер наблюдения. 
+  """
+  global active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
+  df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
+                    columns = [s for s in range(X_train.shape[2])]
+  )
+
+  df_ = {}
+  # Создадим список индексов активных и пассивных датчиков. Среднее значение сигнала не превышает 200 единиц.
+  active_sensors, passive_sensors  = list(), list()
+  reliable_sensors, unreliable_sensors  = list(), list()
+  df_mean = list() # cписок средних абсолютных амплитуд датчиков
+
+  for i in range(40):
+      # если средняя амплитуда превышает 200, то добавляем индекс в 'active_sensors'
+      if df.iloc[i].mean() > 200:
+          active_sensors.append(i)
+          
+          # разница между абсолютными средними значениями за последние 15 сек и первые 60 сек  
+          df_[i] =  abs(df.iloc[i][0:49].mean() - df.iloc[i][85:].mean())
+          df_mean.append(df_[i])
+      
+        # Создадим список индексов надежных и ненадёжных датчиков по амплитуде в 100 единиц
+          if df_[i] > 200:
+              reliable_sensors.append(i)
+          else:
+              unreliable_sensors.append(i)
+      else:
+          passive_sensors.append(i)
+  
+  if print_active is True:
+    if print_reliable is True:
+      print(f"Активные датчики наблюдения " + str(id) +": ", active_sensors)
+      print(f"Пассивные датчики наблюдения " + str(id) +":", passive_sensors)
+      print(f"Датчики с большой амплитудой, наблюдения " + str(id) +": ", reliable_sensors)
+      print(f"Датчики с малой амплитудой, " + str(id) +": ", unreliable_sensors) 
+
+    return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors
+    
