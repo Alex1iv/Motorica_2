@@ -253,8 +253,8 @@ def intervals_freq(x_base: pd.DataFrame, intervals: int) -> pd.DataFrame:
 # Функции от Александра
 #
 #
-# загрузка файлов 
-PATH = 'E:\Kaggle\Motorica_2'
+# загрузка файлов.
+PATH = 'E:\Kaggle\Motorica_2' 
 
 #загрузка обучающей выборки и меток классов
 X_train = np.load(os.path.join(PATH, 'X_train.npy'))
@@ -265,8 +265,14 @@ X_test = np.load(os.path.join(PATH, 'X_test.npy'))
 
 y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
 
+
 def privet(name):   # print 'privet' to a given name
     print(f'privet {name}')
+
+"""def get_y_train():
+    y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python')
+    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
+    return y_train_vectors"""
 
 def get_test_id(id_list):
   """
@@ -274,6 +280,8 @@ def get_test_id(id_list):
   #Аргументы функции: список из номера теста (timestep) и класса жеста
   """
   #global samples
+  global y_train_vectors
+  #get_y_train()
   for id in id_list:
     #res=pd.DataFrame()
     samples = list()
@@ -282,4 +290,4 @@ def get_test_id(id_list):
         samples.append(i)
     print(f"Наблюдения жеста {id}: {str(samples)}")
     samples = pd.Series(data=samples, name=f'{str(id)}', index=[id]*len(samples))
-    return samples
+    #return samples
