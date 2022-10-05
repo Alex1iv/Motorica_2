@@ -273,7 +273,7 @@ def get_test_id(id_list):
   #Функция отображения списка наблюдений.
   #Аргументы функции: список из номера теста (timestep) и класса жеста
   """
-  global samples
+  #global samples
   for id in id_list:
     #res=pd.DataFrame()
     samples = list()
