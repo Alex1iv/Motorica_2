@@ -332,4 +332,23 @@ def get_sensor_list(id, print_active=False, print_reliable=False):
       print(f"Датчики с малой амплитудой, " + str(id) +": ", unreliable_sensors) 
 
     return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors
+
+def get_all_sensors_plot(id):
+  """
+  Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения
+  """
+  #global plot_counter
+  plot_counter=1
+  fig = px.line(
+      data_frame=X_train[id].T, #[active_sensors]
+  )
     
+  fig.update_layout(
+      title=dict(text=f'Рис. {plot_counter}'+' - наблюдение ' + str(id), x=.5, y=0.05, xanchor='center'), 
+      xaxis_title_text = 'Время, сек', yaxis_title_text = 'Показатель', # yaxis_range = [0, 3000],
+      legend_title_text='Индекс <br>датчика',
+      width=600, height=400,
+      margin=dict(l=100, r=60, t=80, b=100),
+  )
+
+  fig.show()
