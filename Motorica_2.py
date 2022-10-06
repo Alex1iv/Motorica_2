@@ -27,7 +27,8 @@ if not sys.warnoptions:
 import os
 
 # загрузка файлов.
-PATH = 'E:\Kaggle\Motorica_2' 
+#PATH = 'E:\Kaggle\Motorica_2' 
+PATH = ""
 
 gestures = ['open',  # 0
             'мизинец',  # 1
@@ -256,33 +257,40 @@ X_train = np.load(os.path.join(PATH, 'X_train.npy'))
 y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python') 
 y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
 
+
+
 #загрузка тестовой выборки
 X_test = np.load(os.path.join(PATH, 'X_test.npy'))
+
+
 
 def privet(name):   # print 'privet' to a given name
     print(f'privet {name}')
 
 def get_y_train():
     y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python')
-    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
+    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
     return y_train_vectors
 
-def get_test_id(id_list, y_train_vectors):
-  """
-  #Функция отображения списка наблюдений.
-  #Аргументы функции: список из номера теста (timestep) и класса жеста
-  """
-  #global y_train_vectors
-  get_y_train()
-  for id in id_list:
-    #res=pd.DataFrame()
+def get_x_train():
+    np.load(os.path.join(PATH, 'X_train.npy'))
+    return get_x_train
+
+def get_test_id(id):
+    """
+    #Функция отображения списка наблюдений.
+    #Аргументы функции: список из номера теста (timestep) и класса жеста
+    """
+    y_train_vectors = get_y_train()
+
     samples = list()
     for i in range(y_train_vectors.shape[0]):
-      if y_train_vectors[i][1]==int(id[0]) and y_train_vectors[i][-1]==int(id[2]):
-        samples.append(i)
+        if y_train_vectors[i][0]==int(id[0]) and y_train_vectors[i][-1]==int(id[2]):
+            samples.append(i)
+
     print(f"Наблюдения жеста {id}: {str(samples)}")
     samples = pd.Series(data=samples, name=f'{str(id)}', index=[id]*len(samples))
-    #return samples
+    return samples
 
 
 
@@ -327,24 +335,230 @@ def get_sensor_list(id, print_active=False, print_reliable=False):
     elif print_reliable is True:
         print(f"Датчики с большой амплитудой, наблюдения " + str(id) +": ", reliable_sensors)
         print(f"Датчики с малой амплитудой, " + str(id) +": ", unreliable_sensors)  
-    return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors
+    return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
+
+
 
 def get_all_sensors_plot(id, plot_counter):
-  """
-  Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
-  """
-  #global plot_counter
-  
-  fig = px.line(
-      data_frame=X_train[id].T, #[active_sensors]
-  )
-    
-  fig.update_layout(
-      title=dict(text=f'Рис. {plot_counter}'+' - наблюдение ' + str(id), x=.5, y=0.05, xanchor='center'), 
-      xaxis_title_text = 'Время, сек', yaxis_title_text = 'Показатель', # yaxis_range = [0, 3000],
-      legend_title_text='Индекс <br>датчика',
-      width=600, height=400,
-      margin=dict(l=100, r=60, t=80, b=100),
-  )
+    """
+    Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
+    """
+    get_sensor_list(id)
+    X_train=np.load(os.path.join(PATH, 'X_train.npy'))
 
-  fig.show()
+    fig = px.line(data_frame=X_train[id].T)
+    
+    fig.update_layout(
+        title=dict(text=f'Рис. {plot_counter}'+' - наблюдение ' + str(id), x=.5, y=0.05, xanchor='center'), 
+        xaxis_title_text = 'Время, сек', yaxis_title_text = 'Показатель', # yaxis_range = [0, 3000],
+        legend_title_text='Индекс <br>датчика',
+        width=600, height=400,
+        margin=dict(l=100, r=60, t=80, b=100),
+    )
+
+    fig.show()
+
+def get_gest_plot(id, plot_counter):
+    """
+    Функция построения диаграммы классификации жеста. Аргумент функции - номер наблюдения и порядковый номер рисунка
+    """
+    get_y_train()
+    y_k = y_train[id*100:(id+1)*100].reset_index().T
+    # смотрим скользящее STD
+
+    time_stp = 0
+    time_end = 100
+    
+    # Изображаем y_k
+    y_k_stp = y_k[range(time_stp, time_end)]
+    fig = plt.figure(figsize=(6, 2))
+    ax = fig.add_axes([0.5, 0, 1, 1]) # ax = fig.add_axes([left, bottom, width, height])
+    ax.plot(list(y_k_stp.columns), y_k_stp.loc['class'].values)
+    
+    ax.set_title(f'Рис. {plot_counter}'+' - Изменение класса жеста', y=-0.5, fontsize=16)
+    ax.set_xlabel('Время')
+    ax.set_ylabel('Класс')
+    
+    plt.show()
+
+def get_active_passive_sensors_plot(id, plot_counter):
+    """
+    Функция построения графика показаний активных и пассивных датчиков.
+    Аргумент функции - номер наблюдения и порядковый номер рисунка. 
+    """
+    global active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
+    get_sensor_list(id) # списки сенсоров не печатаем
+
+    df_ = {}
+    df = pd.DataFrame(data = X_train[id], 
+        index = [s for s in range(X_train.shape[1])], 
+        columns = [s for s in range(X_train.shape[2])]
+    )
+    
+    #get_sensor_list(id, False)
+
+    df_3 = pd.DataFrame(X_train[id][active_sensors].T, columns=active_sensors)
+    df_4 = pd.DataFrame(X_train[id][passive_sensors].T, columns=passive_sensors)
+
+    fig = make_subplots(rows=1, cols=2, 
+                        subplot_titles=('активные датчики', 'пассивные датчики')
+    )
+    
+    for i in df_3.columns: fig.add_trace(go.Scatter(x=df_3.index, y=df_3[i], name=str(df[i].name)), row=1, col=1)
+
+    for i in df_4.columns: fig.add_trace(go.Scatter(x=df_4.index, y=df_4[i], name=str(df[i].name)), row=1, col=2)
+
+    fig.update_layout(title={'text':f'Рис. {plot_counter}'+' - Активные и пассивные датчики наблюдения ' + str(id), 'x':0.5, 'y':0.05}
+    )
+
+    fig.update_layout(width=1000, height=400, legend_title_text ='Номер датчика',
+                        xaxis_title_text  = 'Время',  yaxis_title_text = 'Сигнал датчика', yaxis_range=  [0, 3000], 
+                        xaxis2_title_text = 'Время', yaxis2_title_text = 'Сигнал датчика', yaxis2_range= [0 , 200],
+                        margin=dict(l=100, r=60, t=80, b=100), 
+                        #showlegend=False # легенда загромождает картинку
+    )
+
+    fig.show()
+
+def get_amplitude(arg, plot_counter):
+    """
+    Функция отображения гистограммы амплитуд сильных и слабых датчиков
+    Аргумент функции - номер наблюдения и порядковый номер рисунка
+    """
+    global areliable_sensors, unreliable_sensors, df_mean
+
+    # вызов функции загрузки списка сенсоров  
+    get_sensor_list(arg)
+    
+    df_mean = pd.DataFrame({f'amplitude_{arg}':df_mean}, index=range(len(df_mean)))
+
+    display(df_mean.sort_values(df_mean.columns[0], ascending = False).head(2),\
+            df_mean.sort_values(df_mean.columns[0], ascending = False).tail(2)) #df_mean.iloc[:,[0]], ascending=False))
+    
+    
+    fig = px.histogram(
+        data_frame=df_mean, 
+        #x='passed_step',
+        nbins=7,
+        opacity=0.5, # непрозрачность 
+        marginal='box'
+    )
+
+        
+    fig.update_layout(
+        title=dict(text=f'Рис. {plot_counter} - Распределение амплитуд датчиков по группам', x=.5, y=0.01),
+        width=500, height=300,
+        xaxis_title_text = 'Амплитуда',
+        yaxis_title_text = 'Количество датчиков <br>в группе',
+        template="simple_white",
+        showlegend=False # легенда загромождает картинку
+    )
+    fig.show();
+
+def get_strong_weak_sensors_plot(id, plot_counter):
+    """
+    Функция отображения диаграммы амплитуд сильных и слабых датчиков
+    Аргумент функции - номер наблюдения
+    """
+    
+    # вызов функции загрузки списка сенсоров  
+    get_sensor_list(id)
+    X_train=np.load(os.path.join(PATH, 'X_train.npy'))
+    
+    df = pd.DataFrame(data = X_train[id], 
+        index = [s for s in range(X_train.shape[1])], 
+        columns = [s for s in range(X_train.shape[2])]
+    )
+
+    df_ = {}
+    df_1 = pd.DataFrame(X_train[id][reliable_sensors].T, columns=reliable_sensors)
+    df_2 = pd.DataFrame(X_train[id][unreliable_sensors].T, columns=unreliable_sensors)
+
+    
+
+    fig = make_subplots(rows=1, cols=2, subplot_titles=('сильные сигналы', 'слабые сигналы'))
+    
+    for m in df_1.columns:
+        fig.add_trace(go.Scatter(x=df_1.index, y=df_1[m], name=str(df_1.iloc[m].name)),
+        row=1, col=1 , 
+    )
+
+    for k in df_2.columns:
+        fig.add_trace(go.Scatter(x=df_2.index, y=df_2[k], name=str(df_1.iloc[k].name)), 
+        row=1, col=2
+    )
+    
+    fig.update_layout(title={'text':f'Рис. {plot_counter}'+' - Датчики с сильными и слабыми сигналами, наблюдение ' + str(id), 'x':0.5, 'y':0.01}
+    )
+
+    fig.update_layout(width=1000, height=400, legend_title_text ='Номер датчика',
+                        xaxis_title_text  = 'Время', yaxis_title_text  = 'Сигнал датчика', yaxis_range = [0, 3500],
+                        xaxis2_title_text = 'Время', yaxis2_title_text = 'Сигнал датчика', yaxis2_range= [0, 3500],
+                        #showlegend=False # легенда загромождает картинку
+    )
+
+    fig.show()
+    print(' ')
+    print(f"Датчики с большой амплитудой, наблюдение " + str(id) +": ", reliable_sensors)
+    print(f"Датчики с малой амплитудой, наблюдение " + str(id) +": ", unreliable_sensors) 
+    
+
+
+def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
+    """
+    Функция вывода диаграммы показания отдельных датчиков во всех наблюдениях конкретного жеста
+    Аргументом функции является строка - список датчиков
+    """
+    #функция отбора наблюдений в переменную 'samples' 
+    
+    samples = get_test_id(arg1)
+    sensor_list = arg2 
+    X_train=np.load(os.path.join(PATH, 'X_train.npy'))
+
+    df_selected = pd.DataFrame(columns=range(100))
+    for sample in samples:
+        for sensor in sensor_list:
+            #df = pd.Series([X_train[test,sensor]], index=[str(f"{sensor}")], name=str(f"{test}"))
+            df = pd.DataFrame(X_train[sample,sensor]).T #, columns=range(100)
+            
+            df_selected = pd.merge(df_selected, df, how='outer') # , how='outer'
+    # определим сколько графиков выводить
+    len(arg2)
+    if len(arg2)%2==0:
+
+        fig = make_subplots(rows=2, cols=2, subplot_titles=(
+            f"датчик {arg2[0]}", f"датчик {arg2[1]}", 
+            f"датчик {arg2[2]} ", f"датчик {arg2[3]}")
+        )
+
+        df_1 = df_selected.iloc[0::len(sensor_list)].T
+        df_2 = df_selected.iloc[1::len(sensor_list)].T
+        df_3 = df_selected.iloc[2::len(sensor_list)].T
+        df_4 = df_selected.iloc[3::len(sensor_list)].T
+
+        for i in df_1.columns: 
+            fig.add_trace(go.Scatter(x=df_1.index, y=df_1[i]), row=1, col=1)
+
+        for i in df_2.columns:
+            fig.add_trace(go.Scatter(x=df_2.index, y=df_2[i]), row=1, col=2)
+
+        for i in df_3.columns:
+            fig.add_trace(go.Scatter(x=df_3.index, y=df_3[i]), row=2, col=1)
+            
+        for i in df_4.columns:
+            fig.add_trace(go.Scatter(x=df_4.index, y=df_4[i]), row=2, col=2)
+            
+
+
+        fig.update_layout(height=800, width=1000, #yaxis_type='log', 
+                        title_text="Показания датчиков " + str(sensor_list) + " в наблюдениях жеста 0-1", title_xanchor='left', title_font=dict(size = 22),
+                        xaxis_title_text  = 'Время', yaxis_title_text  = 'Сигнал датчика', yaxis_range =[0 ,3500], 
+                        xaxis2_title_text = 'Время', yaxis2_title_text = 'Сигнал датчика', yaxis2_range=[0 ,3500], 
+                        xaxis3_title_text = 'Время', yaxis3_title_text = 'Сигнал датчика', yaxis3_range=[0 ,3000], 
+                        xaxis4_title_text = 'Время', yaxis4_title_text = 'Сигнал датчика', yaxis4_range=[0 ,3000], 
+                        showlegend=False # легенда загромождает картинку
+        )
+        fig.update_layout(title=dict(text=f'Рис. {plot_counter}'+' - Сигнал датчиков во всех наблюдениях жеста ' + str(arg1), x=0.5, y=0.01, xanchor='center')
+        )
+        fig.show()
+  
