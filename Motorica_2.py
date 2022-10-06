@@ -26,6 +26,8 @@ if not sys.warnoptions:
 
 import os
 
+# загрузка файлов.
+PATH = 'E:\Kaggle\Motorica_2' 
 
 gestures = ['open',  # 0
             'мизинец',  # 1
@@ -248,13 +250,6 @@ def intervals_freq(x_base: pd.DataFrame, intervals: int) -> pd.DataFrame:
     return xif
 
 
-#
-#
-# Функции от Александра
-#
-#
-# загрузка файлов.
-PATH = 'E:\Kaggle\Motorica_2' 
 
 #загрузка обучающей выборки и меток классов
 X_train = np.load(os.path.join(PATH, 'X_train.npy'))
