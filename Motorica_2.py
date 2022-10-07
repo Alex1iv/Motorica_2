@@ -252,15 +252,7 @@ def intervals_freq(x_base: pd.DataFrame, intervals: int) -> pd.DataFrame:
 
 
 
-#загрузка обучающей выборки и меток классов
-X_train = np.load(os.path.join(PATH, 'X_train.npy'))
-y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python') 
-y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class')
 
-
-
-#загрузка тестовой выборки
-X_test = np.load(os.path.join(PATH, 'X_test.npy'))
 
 
 
@@ -337,8 +329,8 @@ def get_all_sensors_plot(id, plot_counter):
     """
     Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
-    get_sensor_list(id)
-    get_x_train()
+    
+    #get_x_train()
     
     #X_train=np.load(os.path.join(PATH, 'X_train.npy'))
 
