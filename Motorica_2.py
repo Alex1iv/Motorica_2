@@ -349,32 +349,33 @@ def get_all_sensors_plot(id, plot_counter):
         margin=dict(l=100, r=60, t=80, b=100),
     )
 
-    fig.show()
+    #fig.show()
+
+    # сохраним результат в папке figures. Если такой папки нет, то создадим её
+    if not os.path.exists("figures"):
+        os.mkdir("figures")
+
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
+
+
 
 def get_gest_plot(id, plot_counter):
-    """
-    Функция построения диаграммы классификации жеста. Аргумент функции - номер наблюдения и порядковый номер рисунка
-    """
     import __init__
     y_train = __init__.y_train
     
     y_k = y_train[id*100:(id+1)*100].reset_index().T
-    # смотрим скользящее STD
+        
+    fig = px.line(y_k.T['class']) 
 
-    time_stp = 0
-    time_end = 100
-    
-    # Изображаем y_k
-    y_k_stp = y_k[range(time_stp, time_end)]
-    fig = plt.figure(figsize=(6, 2))
-    ax = fig.add_axes([0.5, 0, 1, 1]) # ax = fig.add_axes([left, bottom, width, height])
-    ax.plot(list(y_k_stp.columns), y_k_stp.loc['class'].values)
-    
-    ax.set_title(f'Рис. {plot_counter}'+' - Изменение класса жеста', y=-0.5, fontsize=16)
-    ax.set_xlabel('Время')
-    ax.set_ylabel('Класс')
-    
-    plt.show()
+    fig.update_layout(
+        title=dict(text=f'Рис. {plot_counter}'+' - Изменение класса жеста в наблюдении ' + str(id), x=.5, y=0.05, xanchor='center'), 
+        xaxis_title_text = 'Время, сек', yaxis_title_text = 'Класс жеста', yaxis_range = [-1, 10],
+        width=600, height=400,
+        margin=dict(l=100, r=60, t=80, b=100),
+        showlegend=False # легенда загромождает картинку
+    )
+    #fig.show()
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
 def get_active_passive_sensors_plot(id, plot_counter):
     """
@@ -415,7 +416,8 @@ def get_active_passive_sensors_plot(id, plot_counter):
                         #showlegend=False # легенда загромождает картинку
     )
 
-    fig.show()
+    #fig.show()
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
 def get_amplitude(id, plot_counter):
     """
@@ -463,7 +465,8 @@ def get_amplitude(id, plot_counter):
         template="simple_white",
         showlegend=False # легенда загромождает картинку
     )
-    fig.show();
+    #fig.show();
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
 def get_strong_weak_sensors_plot(id, plot_counter):
     """
@@ -473,21 +476,14 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     import __init__
     X_train = __init__.X_train
     active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
-    
+
     # вызов функции загрузки списка сенсоров  
     get_sensor_list(id)
     X_train=np.load(os.path.join(PATH, 'X_train.npy'))
     
-    df = pd.DataFrame(data = X_train[id], 
-        index = [s for s in range(X_train.shape[1])], 
-        columns = [s for s in range(X_train.shape[2])]
-    )
-
-    df_ = {}
     df_1 = pd.DataFrame(X_train[id][reliable_sensors].T, columns=reliable_sensors)
     df_2 = pd.DataFrame(X_train[id][unreliable_sensors].T, columns=unreliable_sensors)
-
-    
+   
 
     fig = make_subplots(rows=1, cols=2, subplot_titles=('сильные сигналы', 'слабые сигналы'))
     
@@ -510,7 +506,8 @@ def get_strong_weak_sensors_plot(id, plot_counter):
                         #showlegend=False # легенда загромождает картинку
     )
 
-    fig.show()
+    #fig.show()
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
     print(' ')
     print(f"Датчики с большой амплитудой, наблюдение " + str(id) +": ", reliable_sensors)
     print(f"Датчики с малой амплитудой, наблюдение " + str(id) +": ", unreliable_sensors) 
@@ -571,9 +568,12 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
                         xaxis4_title_text = 'Время', yaxis4_title_text = 'Сигнал датчика', yaxis4_range=[0 ,3000], 
                         showlegend=False # легенда загромождает картинку
         )
+        
         fig.update_layout(title=dict(text=f'Рис. {plot_counter}'+' - Сигнал датчиков во всех наблюдениях жеста ' + str(arg1), x=0.5, y=0.01, xanchor='center')
         )
-        fig.show()
+
+        #fig.show()
+        fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
   
 
 
