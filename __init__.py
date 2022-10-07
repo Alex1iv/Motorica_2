@@ -38,11 +38,3 @@ y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values
 #загрузка тестовой выборки
 X_test = np.load(os.path.join(PATH, 'X_test.npy'))
 
-def get_y_train():
-    y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python')
-    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
-    return y_train_vectors
-
-def get_x_train():
-    X_train = np.load(os.path.join(PATH, 'X_train.npy'))
-    return get_x_train

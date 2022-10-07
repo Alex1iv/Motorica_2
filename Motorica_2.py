@@ -1,3 +1,5 @@
+
+
 # Импортируем библиотеки
 import pandas as pd
 import numpy as np
@@ -287,20 +289,20 @@ def get_test_id(id):
     samples = pd.Series(data=samples, name=f'{str(id)}', index=[id]*len(samples))
     return samples
 
-import __init__
-__init__.X_train
 
-def get_sensor_list(id, print_active=False, print_reliable=False, X_train=X_train):
+
+def get_sensor_list(id, print_active=False, print_reliable=False):
     """
     Функция печати и импорта в память всех номеров датчиков
     Аргумент функции - номер наблюдения. 
     """
-    
+    import __init__
+    X_train = __init__.X_train
+
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                         columns = [s for s in range(X_train.shape[2])]
     )
-
-    df_ = {}
+    
     # Создадим список индексов активных и пассивных датчиков. Среднее значение сигнала не превышает 200 единиц.
     active_sensors, passive_sensors, reliable_sensors, unreliable_sensors  = list(), list(), list(), list()
     
@@ -309,22 +311,23 @@ def get_sensor_list(id, print_active=False, print_reliable=False, X_train=X_trai
         if df.iloc[i].mean() > 200:
             active_sensors.append(i)
                    
-            # Создадим список индексов надежных и ненадёжных датчиков по амплитуде в 100 единиц
-            if df_[i] > 200:
+            # Если разница между абсолютными средними значениями за последние 15 сек и первые 60 сек превышает 200,
+            # то датчики заносим в список надежных. Остальные датчики с малой амплитудой - в список ненадёжных. 
+            if abs(df.iloc[i][0:49].mean() - df.iloc[i][85:].mean()) > 200:
                 reliable_sensors.append(i)
             else:
                 unreliable_sensors.append(i)
         else:
             passive_sensors.append(i)
   
+      
     if print_active is True:
         print(f"Активные датчики наблюдения " + str(id) +": ", active_sensors)
         print(f"Пассивные датчики наблюдения " + str(id) +":", str(passive_sensors))
-        
-  
     elif print_reliable is True:
         print(f"Датчики с большой амплитудой, наблюдения " + str(id) +": ", reliable_sensors)
         print(f"Датчики с малой амплитудой, " + str(id) +": ", unreliable_sensors)  
+    
     return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors
 
 
@@ -333,10 +336,8 @@ def get_all_sensors_plot(id, plot_counter):
     """
     Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
-    
-    #get_x_train()
-    
-    #X_train=np.load(os.path.join(PATH, 'X_train.npy'))
+    import __init__
+    X_train = __init__.X_train
 
     fig = px.line(data_frame=X_train[id].T)
     
@@ -354,7 +355,9 @@ def get_gest_plot(id, plot_counter):
     """
     Функция построения диаграммы классификации жеста. Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
-    get_y_train()
+    import __init__
+    y_train = __init__.y_train
+    
     y_k = y_train[id*100:(id+1)*100].reset_index().T
     # смотрим скользящее STD
 
@@ -378,10 +381,12 @@ def get_active_passive_sensors_plot(id, plot_counter):
     Функция построения графика показаний активных и пассивных датчиков.
     Аргумент функции - номер наблюдения и порядковый номер рисунка. 
     """
-    global active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
-    get_sensor_list(id) # списки сенсоров не печатаем
+    
+    import __init__
+    X_train = __init__.X_train
+    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
 
-    df_ = {}
+    
     df = pd.DataFrame(data = X_train[id], 
         index = [s for s in range(X_train.shape[1])], 
         columns = [s for s in range(X_train.shape[2])]
@@ -412,41 +417,38 @@ def get_active_passive_sensors_plot(id, plot_counter):
 
     fig.show()
 
-def get_amplitude(arg, plot_counter):
+def get_amplitude(id, plot_counter):
     """
     Функция отображения гистограммы амплитуд сильных и слабых датчиков
     Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
-    # Загрузка X_train
-    get_x_train()
-    df_ = {}
-    
+    import __init__
+    X_train = __init__.X_train
+        
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                         columns = [s for s in range(X_train.shape[2])]
     )
-
+    
     df_mean = list() # cписок средних абсолютных амплитуд датчиков
 
     for i in range(X_train.shape[1]):
-        # если средняя амплитуда превышает 200, то добавляем индекс в 'active_sensors'
-        if df.iloc[i].mean() > 200:
-            active_sensors.append(i)
-            
-            # разница между абсолютными средними значениями за последние 15 сек и первые 60 сек  
-            df_[i] =  abs(df.iloc[i][0:49].mean() - df.iloc[i][85:].mean())
-            df_mean.append(df_[i])
+        # средняя величина сигнала
+        value = df.iloc[i].mean()
+        # разница между абсолютными средними значениями за последние 15 сек и первые 50 сек 
+        amplitude = abs(df.iloc[i][85:].mean() - df.iloc[i][0:49].mean())
+
+        #если средняя величина сигнала превышает 200 
+        if value > 200 :
+            df_mean.append(amplitude)
 
     
-    df_mean = pd.DataFrame({f'amplitude_{arg}':df_mean}, index=range(len(df_mean)))
+    df_mean = pd.DataFrame({f'amplitude_{id}':df_mean}, index=range(len(df_mean)))
 
-    display(df_mean.sort_values(df_mean.columns[0], ascending = False).head(2),
-            df_mean.sort_values(df_mean.columns[0], ascending = False).tail(2)
-    )
+    #print(df_mean.sort_values(df_mean.columns[0], ascending = False).head(2), df_mean.sort_values(df_mean.columns[0], ascending = False).tail(2))
     
     
     fig = px.histogram(
         data_frame=df_mean, 
-        #x='passed_step',
         nbins=7,
         opacity=0.5, # непрозрачность 
         marginal='box'
@@ -468,6 +470,9 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     Функция отображения диаграммы амплитуд сильных и слабых датчиков
     Аргумент функции - номер наблюдения
     """
+    import __init__
+    X_train = __init__.X_train
+    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
     
     # вызов функции загрузки списка сенсоров  
     get_sensor_list(id)
@@ -570,3 +575,5 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
         )
         fig.show()
   
+
+
