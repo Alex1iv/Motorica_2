@@ -362,7 +362,7 @@ def get_all_sensors_plot(id, plot_counter):
 def get_gest_plot(id, plot_counter):
     import __init__
     y_train = __init__.y_train
-    
+    #отобразим у_train для наблюдения id
     y_k = y_train[id*100:(id+1)*100].reset_index().T
         
     fig = px.line(y_k.T['class']) 
