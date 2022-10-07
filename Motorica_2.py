@@ -299,26 +299,20 @@ def get_sensor_list(id, print_active=False, print_reliable=False):
     Функция печати и импорта в память всех номеров датчиков
     Аргумент функции - номер наблюдения. 
     """
-    global active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
+    
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                         columns = [s for s in range(X_train.shape[2])]
     )
 
     df_ = {}
     # Создадим список индексов активных и пассивных датчиков. Среднее значение сигнала не превышает 200 единиц.
-    active_sensors, passive_sensors  = list(), list()
-    reliable_sensors, unreliable_sensors  = list(), list()
-    df_mean = list() # cписок средних абсолютных амплитуд датчиков
-
-    for i in range(40):
+    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors  = list(), list(), list(), list()
+    
+    for i in range(X_train.shape[1]):
         # если средняя амплитуда превышает 200, то добавляем индекс в 'active_sensors'
         if df.iloc[i].mean() > 200:
             active_sensors.append(i)
-            
-            # разница между абсолютными средними значениями за последние 15 сек и первые 60 сек  
-            df_[i] =  abs(df.iloc[i][0:49].mean() - df.iloc[i][85:].mean())
-            df_mean.append(df_[i])
-        
+                   
             # Создадим список индексов надежных и ненадёжных датчиков по амплитуде в 100 единиц
             if df_[i] > 200:
                 reliable_sensors.append(i)
@@ -335,7 +329,7 @@ def get_sensor_list(id, print_active=False, print_reliable=False):
     elif print_reliable is True:
         print(f"Датчики с большой амплитудой, наблюдения " + str(id) +": ", reliable_sensors)
         print(f"Датчики с малой амплитудой, " + str(id) +": ", unreliable_sensors)  
-    return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors, df_mean
+    return active_sensors, passive_sensors, reliable_sensors, unreliable_sensors
 
 
 
@@ -344,7 +338,9 @@ def get_all_sensors_plot(id, plot_counter):
     Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
     get_sensor_list(id)
-    X_train=np.load(os.path.join(PATH, 'X_train.npy'))
+    get_x_train()
+    
+    #X_train=np.load(os.path.join(PATH, 'X_train.npy'))
 
     fig = px.line(data_frame=X_train[id].T)
     
@@ -425,15 +421,31 @@ def get_amplitude(arg, plot_counter):
     Функция отображения гистограммы амплитуд сильных и слабых датчиков
     Аргумент функции - номер наблюдения и порядковый номер рисунка
     """
-    global areliable_sensors, unreliable_sensors, df_mean
+    # Загрузка X_train
+    get_x_train()
+    df_ = {}
+    
+    df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
+                        columns = [s for s in range(X_train.shape[2])]
+    )
 
-    # вызов функции загрузки списка сенсоров  
-    get_sensor_list(arg)
+    df_mean = list() # cписок средних абсолютных амплитуд датчиков
+
+    for i in range(X_train.shape[1]):
+        # если средняя амплитуда превышает 200, то добавляем индекс в 'active_sensors'
+        if df.iloc[i].mean() > 200:
+            active_sensors.append(i)
+            
+            # разница между абсолютными средними значениями за последние 15 сек и первые 60 сек  
+            df_[i] =  abs(df.iloc[i][0:49].mean() - df.iloc[i][85:].mean())
+            df_mean.append(df_[i])
+
     
     df_mean = pd.DataFrame({f'amplitude_{arg}':df_mean}, index=range(len(df_mean)))
 
-    display(df_mean.sort_values(df_mean.columns[0], ascending = False).head(2),\
-            df_mean.sort_values(df_mean.columns[0], ascending = False).tail(2)) #df_mean.iloc[:,[0]], ascending=False))
+    display(df_mean.sort_values(df_mean.columns[0], ascending = False).head(2),
+            df_mean.sort_values(df_mean.columns[0], ascending = False).tail(2)
+    )
     
     
     fig = px.histogram(
