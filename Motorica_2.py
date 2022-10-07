@@ -30,6 +30,9 @@ import os
 #PATH = 'E:\Kaggle\Motorica_2' 
 PATH = ""
 
+import __init__
+__init__.X_train
+
 gestures = ['open',  # 0
             'мизинец',  # 1
             'безымянный палец',  # 2
@@ -284,9 +287,10 @@ def get_test_id(id):
     samples = pd.Series(data=samples, name=f'{str(id)}', index=[id]*len(samples))
     return samples
 
+import __init__
+__init__.X_train
 
-
-def get_sensor_list(id, print_active=False, print_reliable=False):
+def get_sensor_list(id, print_active=False, print_reliable=False, X_train=X_train):
     """
     Функция печати и импорта в память всех номеров датчиков
     Аргумент функции - номер наблюдения. 

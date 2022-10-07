@@ -44,5 +44,5 @@ def get_y_train():
     return y_train_vectors
 
 def get_x_train():
-    np.load(os.path.join(PATH, 'X_train.npy'))
+    X_train = np.load(os.path.join(PATH, 'X_train.npy'))
     return get_x_train
