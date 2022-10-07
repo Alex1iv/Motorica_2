@@ -489,7 +489,7 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     
     for m in df_1.columns:
         fig.add_trace(go.Scatter(x=df_1.index, y=df_1[m], name=str(df_1.iloc[m].name)),
-        row=1, col=1 , 
+        row=1, col=1, 
     )
 
     for k in df_2.columns:
