@@ -598,9 +598,7 @@ def get_diff_plot(id, sensor, plot_counter):
     import __init__
     X_train = __init__.X_train
     y_train = __init__.y_train
-    #id = 2
     time_stp = 0 # начальный интервал времени можно сдвинуть
-    #sensor = 24
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                     columns = [s for s in range(X_train.shape[2])]
     ).T
@@ -614,7 +612,7 @@ def get_diff_plot(id, sensor, plot_counter):
     y_k_50 = y_k[range(time_stp, 100)]
     #df_T_50 = df_T_50.rolling(window=5).mean().dropna(axis=0)
 
-    f, ax = plt.subplots(3, 1, figsize=(10, 9))
+    fig, ax = plt.subplots(3, 1, figsize=(10, 9))
     plt.subplots_adjust(  left=0.1,   right=0.9,
                         bottom=0.1,     top=0.9,
                         wspace=0.1,  hspace=0.4)
@@ -636,8 +634,9 @@ def get_diff_plot(id, sensor, plot_counter):
     ax[2].plot(list(range(len(np.diff(df_T_50[sensor], 1)))), np.diff(df_T_50[sensor],1))
     ax[2].set_title(f'Производная сигнала датчика {sensor}', fontsize=16)
     #ax[2].grid()
-
+    
     plt.savefig(f'figures/fig_{plot_counter}.png')
+    plt.close(fig);
     #plt.show();
 
 
@@ -666,7 +665,7 @@ def get_roling(id, sensors, plot_counter):
     df_T_50_mean_1 = df_T_50.rolling(window=5).mean().dropna(axis=0)
     df_T_50_mean_2 = df_T_50.rolling(window=15).mean().dropna(axis=0)
 
-    f, ax = plt.subplots(2, 1, figsize = (10, 10))
+    fig, ax = plt.subplots(2, 1, figsize = (10, 10))
     plt.subplots_adjust(  left=0.1,   right=0.9,
                         bottom=0.1,     top=0.9,
                         wspace=0.1,  hspace=0.3)
@@ -687,6 +686,7 @@ def get_roling(id, sensors, plot_counter):
     ax[1].set_title(f'Скользящее среднее сигнала датчика {sensor} в наблюдении {id}', fontsize=16)
     ax[1].set_ylabel('Сигнал датчика')
     ax[1].set_xlabel('Время')
-
+    
     plt.savefig(f'figures/fig_{plot_counter}.png')
+    plt.close(fig)
     #plt.show();
