@@ -491,10 +491,6 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     import __init__
     X_train = __init__.X_train
     active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
-
-    # вызов функции загрузки списка сенсоров  
-    #get_sensor_list(id)
-    #X_train=np.load(os.path.join(PATH, 'X_train.npy'))
     
     df_1 = pd.DataFrame(X_train[id][reliable_sensors].T, columns=reliable_sensors)
     df_2 = pd.DataFrame(X_train[id][unreliable_sensors].T, columns=unreliable_sensors)
@@ -535,7 +531,6 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
     Аргументом функции является строка - список датчиков
     """
     #функция отбора наблюдений в переменную 'samples' 
-    
     samples = get_test_id(arg1)
     sensor_list = arg2 
     X_train=np.load(os.path.join(PATH, 'X_train.npy'))
@@ -591,3 +586,107 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
         fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
   
 
+
+def get_diff_plot(id, sensor, plot_counter):
+    """
+    Функция вывода диаграмм заданного датчика в наблюдении, производной и её квадрата
+    Аргументами функции является:
+    id - номер наблюдения
+    sens - номер датчика
+    plot_counter - номер рисунка
+    """
+    import __init__
+    X_train = __init__.X_train
+    y_train = __init__.y_train
+    #id = 2
+    time_stp = 0 # начальный интервал времени можно сдвинуть
+    #sensor = 24
+    df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
+                    columns = [s for s in range(X_train.shape[2])]
+    ).T
+
+    y_k = y_train[id*100:(id+1)*100].reset_index().T
+    # временной промежуток
+    time_stp = 0
+    time_end = 100
+
+    df_T_50 = df.iloc[time_stp:]
+    y_k_50 = y_k[range(time_stp, 100)]
+    #df_T_50 = df_T_50.rolling(window=5).mean().dropna(axis=0)
+
+    f, ax = plt.subplots(3, 1, figsize=(10, 9))
+    plt.subplots_adjust(  left=0.1,   right=0.9,
+                        bottom=0.1,     top=0.9,
+                        wspace=0.1,  hspace=0.4)
+
+    plt.suptitle(f'Рис. {plot_counter}'+' - сравнение и преобразование сигнала датчика', y=-0.01, fontsize=16)
+
+    ax[0].plot(list(y_k_50.columns), y_k_50.loc['class'].values)
+    ax[0].set_title(f'Изменение класса жеста', fontsize=16)
+    ax[0].set_ylabel('Класс жеста')
+    ax[0].set_yticks(
+                    np.arange(9),
+                    ['Open', 'Pinky', 'Ring', 'Middle', 'Pistol', 'Index', 'Thumb', 'OK', 'Grab']
+    )
+
+    ax[1].plot(list(df_T_50.index), df_T_50[sensor].values)
+    ax[1].set_title(f'Сигнал датчика {sensor} в наблюдении {id}', fontsize=16)
+    ax[1].set_ylabel('Сигнал датчика')
+
+    ax[2].plot(list(range(len(np.diff(df_T_50[sensor], 1)))), np.diff(df_T_50[sensor],1))
+    ax[2].set_title(f'Производная сигнала датчика {sensor}', fontsize=16)
+    #ax[2].grid()
+
+    plt.savefig(f'figures/fig_{plot_counter}.png')
+    #plt.show();
+
+
+def get_roling(id, sensors, plot_counter):
+    """
+    Функция вывода диаграмм сигнала датчика по методу скользящего среднего
+    Аргументами функции является:
+    id - номер наблюдения
+    sensors - список датчиков
+    plot_counter - номер рисунка
+    """
+
+    import __init__
+    X_train = __init__.X_train
+    y_train = __init__.y_train
+
+    df0_T = pd.DataFrame(data = X_train[id], index = range(X_train.shape[1]), columns = range(X_train.shape[2])).T
+    y_k = y_train[id*100:(id+1)*100].reset_index().T
+
+
+    time_stp = 0
+    time_end = 75
+
+    # Скользящие средние с одним пересечением
+    df_T_50 = df0_T.iloc[time_stp:time_end]
+    df_T_50_mean_1 = df_T_50.rolling(window=5).mean().dropna(axis=0)
+    df_T_50_mean_2 = df_T_50.rolling(window=15).mean().dropna(axis=0)
+
+    f, ax = plt.subplots(2, 1, figsize = (10, 10))
+    plt.subplots_adjust(  left=0.1,   right=0.9,
+                        bottom=0.1,     top=0.9,
+                        wspace=0.1,  hspace=0.3)
+    plt.suptitle(f'Рис. {plot_counter}'+' - сравнение и преобразование сигнала датчика', y=-0.01, fontsize=16)
+    sensor = sensors[0]
+    ax[0].plot(list(df_T_50.index), df_T_50[sensor].values)
+    ax[0].plot(list(df_T_50_mean_1.index), df_T_50_mean_1[sensor].values, color = 'r')
+    ax[0].plot(list(df_T_50_mean_2.index), df_T_50_mean_2[sensor].values, color = 'g')
+    ax[0].set_title(f'Скользящее среднее сигнала датчика {sensor} в наблюдении {id}', fontsize=16)
+    ax[0].set_ylabel('Сигнал датчика')
+    ax[0].set_xlabel('Время')
+
+    # Скользящие средние с несколькими пересечениями
+    sensor = sensors[1]
+    ax[1].plot(list(df_T_50.index), df_T_50[sensor].values)
+    ax[1].plot(list(df_T_50_mean_1.index), df_T_50_mean_1[sensor].values, color = 'r')
+    ax[1].plot(list(df_T_50_mean_2.index), df_T_50_mean_2[sensor].values, color = 'g')
+    ax[1].set_title(f'Скользящее среднее сигнала датчика {sensor} в наблюдении {id}', fontsize=16)
+    ax[1].set_ylabel('Сигнал датчика')
+    ax[1].set_xlabel('Время')
+
+    plt.savefig(f'figures/fig_{plot_counter}.png')
+    #plt.show();
