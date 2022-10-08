@@ -493,8 +493,8 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
 
     # вызов функции загрузки списка сенсоров  
-    get_sensor_list(id)
-    X_train=np.load(os.path.join(PATH, 'X_train.npy'))
+    #get_sensor_list(id)
+    #X_train=np.load(os.path.join(PATH, 'X_train.npy'))
     
     df_1 = pd.DataFrame(X_train[id][reliable_sensors].T, columns=reliable_sensors)
     df_2 = pd.DataFrame(X_train[id][unreliable_sensors].T, columns=unreliable_sensors)
