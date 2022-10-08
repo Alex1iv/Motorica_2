@@ -158,7 +158,7 @@ def box_sens(sens: int, read_xtrain_df: pd.DataFrame, plot_counter) -> None:
         color = 'b_e',
     )
     fig.update_layout(
-        title=dict(text=f'Рис. {plot_counter}'+' - показания датчика ' + str(sens) + 'в разрезе всех наблюдений и жестов', x=.5, y=0.05, xanchor='center'), 
+        title=dict(text=f'Рис. {plot_counter}'+' - показания датчика ' + str(sens) + ' в разрезе всех наблюдений и жестов', x=.5, y=0.05, xanchor='center'), 
         xaxis_title_text = 'Время, сек', yaxis_title_text = 'Жест', # yaxis_range = [0, 3000],
         legend_title_text='Временной <br>промежуток',
         width=1000, height=600,
