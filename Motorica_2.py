@@ -30,7 +30,7 @@ import os
 
 # загрузка файлов.
 #PATH = 'E:\Kaggle\Motorica_2' 
-PATH = ""
+PATH = "./"
 
 import __init__
 __init__.X_train

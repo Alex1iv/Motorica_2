@@ -28,7 +28,7 @@ import os
 
 # загрузка файлов.
 #PATH = 'E:\Kaggle\Motorica_2' 
-PATH = "."
+PATH = "./"
 
 #загрузка обучающей выборки и меток классов
 X_train = np.load(os.path.join(PATH, 'X_train.npy'))
