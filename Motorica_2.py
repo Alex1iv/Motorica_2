@@ -143,16 +143,29 @@ def read_gests(xtrain: np.array, ytrain: pd.DataFrame,
     return read_xtrain_df
 
 
-def box_sens(sens: int, read_xtrain_df: pd.DataFrame) -> None: 
-    # (5, df[df['b_e'] != 'pass'].loc[:, ['sensor_5', 'b_e', 'Class_name']])
-    '''строит боксплот для датчика sens в разрезе жестов, 
-    агрегируя по всем наблюдениям'''
-    plt.style.use('ggplot')
-    fig = plt.figure(figsize=(16, 10))
-    boxplot = sns.boxplot(data=read_xtrain_df, 
-                          x=f'sensor_{sens}', y='Class_name', hue='b_e', 
-                          orient='h', width=0.9, dodge=True
-                          )
+def box_sens(sens: int, read_xtrain_df: pd.DataFrame, plot_counter) -> None: 
+    '''
+    Функция box_sens строит блочные диаграммы для датчика sens в разрезе жестов, агрегируя по всем наблюдениям.  Аргументы: 
+    sens - номер датчика;
+    read_xtrain_df - массив данных;
+    plot_counter - порядковый номер диаграммы.
+    '''
+
+    fig = px.box(
+        data_frame = read_xtrain_df,
+        x = f'sensor_{sens}',
+        y = 'Class_name',
+        color = 'b_e',
+    )
+    fig.update_layout(
+        title=dict(text=f'Рис. {plot_counter}'+' - показания датчика ' + str(sens) + 'в разрезе всех наблюдений и жестов', x=.5, y=0.05, xanchor='center'), 
+        xaxis_title_text = 'Время, сек', yaxis_title_text = 'Жест', # yaxis_range = [0, 3000],
+        legend_title_text='Временной <br>промежуток',
+        width=1000, height=600,
+        margin=dict(l=100, r=60, t=80, b=100),
+    )
+    #fig.show()
+    fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
     
 def box_sens_all(read_xtrain_df: pd.DataFrame) -> None:  # (df[df['b_e'] != 'pass'])
@@ -269,16 +282,18 @@ def get_y_train():
     y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
     return y_train_vectors
 
-def get_x_train():
-    np.load(os.path.join(PATH, 'X_train.npy'))
-    return get_x_train
+# def get_x_train():
+#     np.load(os.path.join(PATH, 'X_train.npy'))
+#     return get_x_train
 
 def get_test_id(id):
     """
     #Функция отображения списка наблюдений.
     #Аргументы функции: список из номера теста (timestep) и класса жеста
     """
-    y_train_vectors = get_y_train()
+    import __init__
+    y_train = __init__.y_train
+    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
 
     samples = list()
     for i in range(y_train_vectors.shape[0]):
@@ -575,5 +590,4 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
         #fig.show()
         fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
   
-
 
