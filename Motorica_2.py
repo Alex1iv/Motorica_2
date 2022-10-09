@@ -32,8 +32,6 @@ import os
 #PATH = 'E:\Kaggle\Motorica_2' 
 PATH = "./"
 
-import __init__
-__init__.X_train
 
 gestures = ['open',  # 0
             'мизинец',  # 1
