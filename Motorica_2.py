@@ -167,6 +167,7 @@ def box_sens(sens: int, read_xtrain_df: pd.DataFrame, plot_counter) -> None:
     #fig.show()
     fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
+  
     
 def box_sens_all(read_xtrain_df: pd.DataFrame) -> None:  # (df[df['b_e'] != 'pass'])
     '''строит боксплоты для всех 40 датчиков в разрезе жестов, 
@@ -179,6 +180,7 @@ def box_sens_all(read_xtrain_df: pd.DataFrame) -> None:  # (df[df['b_e'] != 'pas
                               width=0.9, dodge=True, showmeans=True)
 
 
+
 def x_dataframe(x_base: np.array) -> pd.DataFrame:   # (X_train)
     '''Переводит np.array X_train в формат DataFrame.
     Столбцы - датчики, индексы в формате "наблюдение-время"'''
@@ -189,6 +191,7 @@ def x_dataframe(x_base: np.array) -> pd.DataFrame:   # (X_train)
                               columns=[f'{samp}-{t}' for t in range(100)]).T
         x_df = pd.concat([x_df, x_samp], ignore_index=False)
     return x_df
+
 
 
 def data_out_transit(xdf: pd.DataFrame, ydf: pd.DataFrame,
@@ -207,6 +210,8 @@ def data_out_transit(xdf: pd.DataFrame, ydf: pd.DataFrame,
                               ignore_index=False)
            ydf_ot = pd.concat([ydf_ot, ydf[ydf.index == row]], ignore_index=False)
     return xdf_ot, ydf_ot        
+
+
 
 def zero_levels_base(xtrain: np.array)-> pd.DataFrame:    # (X_train)
     '''Формирует из X_train данные по жестам "0-0" 
@@ -271,28 +276,12 @@ def intervals_freq(x_base: pd.DataFrame, intervals: int) -> pd.DataFrame:
 
 
 
-
-
-
-def privet(name):   # print 'privet' to a given name
-    print(f'privet {name}')
-
-def get_y_train():
-    y_train = pd.read_csv(os.path.join(PATH, 'y_train.csv'), sep='[-,]',  engine='python')
-    y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
-    return y_train_vectors
-
-# def get_x_train():
-#     np.load(os.path.join(PATH, 'X_train.npy'))
-#     return get_x_train
-
-def get_test_id(id):
+def get_test_id(id, y_train):
     """
     #Функция отображения списка наблюдений.
     #Аргументы функции: список из номера теста (timestep) и класса жеста
     """
-    import __init__
-    y_train = __init__.y_train
+    
     y_train_vectors = y_train.pivot_table(index='sample', columns='timestep', values='class').values
 
     samples = list()
@@ -306,14 +295,12 @@ def get_test_id(id):
 
 
 
-def get_sensor_list(id, print_active=False, print_reliable=False):
+def get_sensor_list(id, X_train, print_active=False, print_reliable=False):
     """
     Функция печати и импорта в память всех номеров датчиков
     Аргумент функции - номер наблюдения. 
     """
-    import __init__
-    X_train = __init__.X_train
-
+    
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                         columns = [s for s in range(X_train.shape[2])]
     )
@@ -347,12 +334,14 @@ def get_sensor_list(id, print_active=False, print_reliable=False):
 
 
 
-def get_all_sensors_plot(id, plot_counter):
+def get_all_sensors_plot(id, X_train, plot_counter):
     """
-    Функция построения диаграммы показания датчиков. Аргумент функции - номер наблюдения и порядковый номер рисунка
+    Функция построения диаграммы показания датчиков. Аргумент функции - 
+    id - номер наблюдения;
+    X_train - обучающая выборка;
+    plot_counter - порядковый номер рисунка.
     """
-    import __init__
-    X_train = __init__.X_train
+    
 
     fig = px.line(data_frame=X_train[id].T)
     
@@ -374,9 +363,15 @@ def get_all_sensors_plot(id, plot_counter):
 
 
 
-def get_gest_plot(id, plot_counter):
-    import __init__
-    y_train = __init__.y_train
+def get_gest_plot(id, y_train, plot_counter):
+    """
+    Функция get_gest_plot отображает диаграмму изменения класса жеста
+    Аргументы:
+    id - номер наблюдения;
+    
+    y_train -  маска выполнения жеста для обучающей выборки
+    plot_counter - порядковый номер рисунка. 
+    """
     #отобразим у_train для наблюдения id
     y_k = y_train[id*100:(id+1)*100].reset_index().T
         
@@ -392,15 +387,16 @@ def get_gest_plot(id, plot_counter):
     #fig.show()
     fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
-def get_active_passive_sensors_plot(id, plot_counter):
+def get_active_passive_sensors_plot(id, X_train, plot_counter):
     """
     Функция построения графика показаний активных и пассивных датчиков.
-    Аргумент функции - номер наблюдения и порядковый номер рисунка. 
+    Аргумент функции:
+    id - номер наблюдения;
+    X_train - обучающая выборка;
+    plot_counter - порядковый номер рисунка.  
     """
-    
-    import __init__
-    X_train = __init__.X_train
-    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
+        
+    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id, X_train) # списки сенсоров не печатаем
 
     
     df = pd.DataFrame(data = X_train[id], 
@@ -434,13 +430,15 @@ def get_active_passive_sensors_plot(id, plot_counter):
     #fig.show()
     fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
-def get_amplitude(id, plot_counter):
+def get_amplitude(id, X_train, plot_counter):
     """
     Функция отображения гистограммы амплитуд сильных и слабых датчиков
-    Аргумент функции - номер наблюдения и порядковый номер рисунка
+    Аргументы функции:
+    id - номер наблюдения;
+    X_train - обучающая выборка;
+    plot_counter - порядковый номер рисунка.
     """
-    import __init__
-    X_train = __init__.X_train
+    
         
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                         columns = [s for s in range(X_train.shape[2])]
@@ -483,14 +481,16 @@ def get_amplitude(id, plot_counter):
     #fig.show();
     fig.write_image(f'figures/fig_{plot_counter}.png', engine="kaleido")
 
-def get_strong_weak_sensors_plot(id, plot_counter):
+def get_strong_weak_sensors_plot(id, X_train, plot_counter):
     """
     Функция отображения диаграммы амплитуд сильных и слабых датчиков
-    Аргумент функции - номер наблюдения
+    Аргументы функции:
+    id - номер наблюдения;
+    X_train - обучающая выборка;
+    plot_counter - порядковый номер рисунка.
     """
-    import __init__
-    X_train = __init__.X_train
-    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id) # списки сенсоров не печатаем
+    
+    active_sensors, passive_sensors, reliable_sensors, unreliable_sensors = get_sensor_list(id, X_train) # списки сенсоров не печатаем
     
     df_1 = pd.DataFrame(X_train[id][reliable_sensors].T, columns=reliable_sensors)
     df_2 = pd.DataFrame(X_train[id][unreliable_sensors].T, columns=unreliable_sensors)
@@ -525,23 +525,22 @@ def get_strong_weak_sensors_plot(id, plot_counter):
     
 
 
-def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
+def get_sensors_in_all_tests_plot(arg1, arg2, X_train, y_train, plot_counter):
     """
     Функция вывода диаграммы показания отдельных датчиков во всех наблюдениях конкретного жеста
     Аргументом функции является строка - список датчиков
     """
     #функция отбора наблюдений в переменную 'samples' 
-    samples = get_test_id(arg1)
+    samples = get_test_id(arg1, y_train)
     sensor_list = arg2 
     X_train=np.load(os.path.join(PATH, 'X_train.npy'))
 
     df_selected = pd.DataFrame(columns=range(100))
     for sample in samples:
         for sensor in sensor_list:
-            #df = pd.Series([X_train[test,sensor]], index=[str(f"{sensor}")], name=str(f"{test}"))
-            df = pd.DataFrame(X_train[sample,sensor]).T #, columns=range(100)
-            
-            df_selected = pd.merge(df_selected, df, how='outer') # , how='outer'
+            df = pd.DataFrame(X_train[sample,sensor]).T
+            df_selected = pd.merge(df_selected, df, how='outer') 
+
     # определим сколько графиков выводить
     len(arg2)
     if len(arg2)%2==0:
@@ -587,17 +586,17 @@ def get_sensors_in_all_tests_plot(arg1, arg2, plot_counter):
   
 
 
-def get_diff_plot(id, sensor, plot_counter):
+def get_diff_plot(id, sensor, X_train, y_train, plot_counter):
     """
     Функция вывода диаграмм заданного датчика в наблюдении, производной и её квадрата
-    Аргументами функции является:
-    id - номер наблюдения
-    sens - номер датчика
-    plot_counter - номер рисунка
+    Аргументы функции:
+    id - номер наблюдения;
+    sens - номер датчика;
+    X_train - обучающая выборка;
+    y_train - маска жеста;
+    plot_counter - порядковый номер рисунка.
     """
-    import __init__
-    X_train = __init__.X_train
-    y_train = __init__.y_train
+    
     time_stp = 0 # начальный интервал времени можно сдвинуть
     df = pd.DataFrame(data = X_train[id], index = [s for s in range(X_train.shape[1])], 
                     columns = [s for s in range(X_train.shape[2])]
@@ -640,18 +639,16 @@ def get_diff_plot(id, sensor, plot_counter):
     #plt.show();
 
 
-def get_roling(id, sensors, plot_counter):
+def get_roling(id, sensors, X_train, y_train, plot_counter):
     """
     Функция вывода диаграмм сигнала датчика по методу скользящего среднего
-    Аргументами функции является:
-    id - номер наблюдения
-    sensors - список датчиков
-    plot_counter - номер рисунка
+    Аргументы функции:
+    id - номер наблюдения;
+    sens - номер датчика;
+    X_train - обучающая выборка;
+    y_train - маска жеста;
+    plot_counter - порядковый номер рисунка.
     """
-
-    import __init__
-    X_train = __init__.X_train
-    y_train = __init__.y_train
 
     df0_T = pd.DataFrame(data = X_train[id], index = range(X_train.shape[1]), columns = range(X_train.shape[2])).T
     y_k = y_train[id*100:(id+1)*100].reset_index().T
