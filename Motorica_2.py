@@ -339,8 +339,6 @@ def get_all_sensors_plot(id, X_train, plot_counter):
     X_train - обучающая выборка;
     plot_counter - порядковый номер рисунка.
     """
-    
-
     fig = px.line(data_frame=X_train[id].T)
     
     fig.update_layout(
